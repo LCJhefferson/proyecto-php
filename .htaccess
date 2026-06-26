@@ -1,7 +1,8 @@
-Options All -Indexes
+Options -Indexes
 Options -MultiViews
 RewriteEngine On
-RewriteBase /
+
+# Removimos RewriteBase / para que funcione correctamente en subcarpetas locales
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f

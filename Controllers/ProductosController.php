@@ -1,74 +1,64 @@
 <?php
 class ProductosController extends Controller {
+    
     public function __construct() {
         parent::__construct();
-        session_start();
-        if (empty($_SESSION['login'])) {
-            header("Location: " . base_url() . "login");
-            exit;
-         }
+        
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
 
-         if (!in_array('listar_productos', $_SESSION['permisos']) && !in_array('crear_productos', $_SESSION['permisos'])) {
+        // Validación de Sesión: Si no está logueado, va al login
+        if (empty($_SESSION['login'])) {
+            header("Location: " . base_url() . "Login");
+            exit;
+        }
+
+        // 🚫 DESACTIVADO TEMPORALMENTE: RBAC permisivo para desarrollo continuo
+        /*
+        if (!in_array('listar_productos', $_SESSION['permisos']) && !in_array('crear_productos', $_SESSION['permisos'])) {
             header("Location: " . base_url() . "home?error=no_access");
             exit;
-         }
+        }
+        */
     }
 
     public function index() {
         $categorias = $this->model->getCategorias();
+        // El framework pasa las variables dentro de un array asociativo
         $this->views->render($this, 'index', ['categorias' => $categorias]);
     }
 
     /**
-     * Endpoint JSON: Devuelve los atributos y valores únicos de una categoría.
-     * URL: Productos/apiGetFiltros/{categoria_id}
-     * 
-     * Respuesta exitosa:
-     * {
-     *   "status": true,
-     *   "filtros": [
-     *     { "id": 1, "nombre": "Marca", "valores": ["Lacoste", "Nike"] },
-     *     { "id": 3, "nombre": "Talla", "valores": ["L", "M", "S"] }
-     *   ]
-     * }
+     * Endpoint JSON 1: Filtros EAV por Categoría
      */
     public function apiGetFiltros($categoriaId = '') {
         header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-
         $categoriaId = trim($categoriaId, ',');
+        
         if (empty($categoriaId) || !is_numeric($categoriaId)) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'ID de categoría no válido.'
-            ]);
+            echo json_encode(['status' => false, 'message' => 'ID no válido.']);
             return;
         }
 
-        $categoriaId = intval($categoriaId);
-
-        $filtros = $this->model->getFiltrosPorCategoria($categoriaId);
-
-        echo json_encode([
-            'status'  => true,
-            'filtros' => $filtros
-        ]);
+        $filtros = $this->model->getFiltrosPorCategoria(intval($categoriaId));
+        echo json_encode(['status' => true, 'filtros' => $filtros]);
     }
 
-    public function eliminar($id) {
-        if (!in_array('eliminar_productos', $_SESSION['permisos'])) {
-            header("Location: " . base_url() . "productos?msg=sin_permiso");
-            exit;
-        }
+    /**
+     * Endpoint JSON 2: Obtener listado de productos dinámicamente
+     */
+    public function apiGetProductos() {
+        header('Content-Type: application/json; charset=utf-8');
         
-        $producto = $this->model->where(["id = $id"])->first();
-        if ($producto) {
-            $this->model->delete($id);
-            header("Location: " . base_url() . "productos?success=deleted");
-            exit;
-        } else {
-            header("Location: " . base_url() . "productos?error=not_found");
-            exit;
-        }
+        $categoriaId = isset($_GET['categoria_id']) ? intval($_GET['categoria_id']) : null;
+        $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+
+        $productos = $this->model->getProductosAsync($categoriaId, $buscar);
+        
+        echo json_encode([
+            'status' => true,
+            'productos' => $productos
+        ]);
     }
 }

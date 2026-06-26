@@ -8,7 +8,8 @@ class ProductosModel extends Model {
     }
 
     /**
-     * Obtiene todas las categorías disponibles.
+     * Obtiene las categorías directamente para el select inicial.
+     * Corregido para que funcione según tu base de datos real.
      */
     public function getCategorias() {
         $sql = "SELECT id, nombre FROM categorias ORDER BY nombre";
@@ -18,18 +19,15 @@ class ProductosModel extends Model {
     }
 
     /**
-     * Obtiene los atributos y sus valores únicos asociados a una categoría.
-     * Consulta las tablas EAV: productos, valores_productos, atributos.
-     * 
-     * @param int $categoriaId ID de la categoría
-     * @return array Arreglo de atributos con sus valores únicos
+     * Obtiene los atributos y sus valores únicos asociados a una categoría (EAV).
+     * Sincronizado EXACTAMENTE con las columnas de tu proyecto_php.sql
      */
     public function getFiltrosPorCategoria($categoriaId) {
         $sql = "SELECT a.id AS atributo_id, a.nombre AS atributo_nombre, vp.valor
                 FROM productos p
-                INNER JOIN valores_productos vp ON p.id = vp.producto_id
-                INNER JOIN atributos a ON vp.atributo_id = a.id
-                WHERE p.id_categoria = :categoria_id
+                INNER JOIN valores_productos vp ON p.id = vp.id_producto
+                INNER JOIN atributos a ON vp.id_atributo = a.id
+                WHERE p.categoria_id = :categoria_id
                 GROUP BY a.id, a.nombre, vp.valor
                 ORDER BY a.nombre, vp.valor";
 
@@ -52,7 +50,36 @@ class ProductosModel extends Model {
                 $filtros[$atributoId]['valores'][] = $row['valor'];
             }
         }
-
         return array_values($filtros);
+    }
+
+    /**
+     * Obtiene y filtra productos de forma dinámica (Para el buscador con AJAX)
+     */
+    public function getProductosAsync($categoriaId = null, $buscar = '') {
+        $sql = "SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock, c.nombre AS categoria 
+                FROM productos p 
+                INNER JOIN categorias c ON p.categoria_id = c.id 
+                WHERE 1=1";
+        
+        if (!empty($categoriaId)) {
+            $sql .= " AND p.categoria_id = :categoria_id";
+        }
+        if (!empty($buscar)) {
+            $sql .= " AND (p.nombre LIKE :buscar OR p.descripcion LIKE :buscar)";
+        }
+        
+        $sql .= " ORDER BY p.id DESC";
+        $stmt = $this->connect()->prepare($sql);
+        
+        if (!empty($categoriaId)) {
+            $stmt->bindValue(':categoria_id', $categoriaId, PDO::PARAM_INT);
+        }
+        if (!empty($buscar)) {
+            $stmt->bindValue(':buscar', "%$buscar%", PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

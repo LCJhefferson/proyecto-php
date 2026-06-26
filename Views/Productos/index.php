@@ -1,84 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos - Filtros por Categoría</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #filtros-container { margin-top: 15px; }
-        .filtro-grupo { margin-bottom: 15px; }
-        .filtro-grupo h4 { margin: 0 0 6px 0; font-size: 14px; text-transform: uppercase; color: #333; }
-        .filtro-grupo label { display: block; font-size: 13px; margin-bottom: 3px; cursor: pointer; }
-        #filtros-container p { color: #888; font-size: 13px; }
-    </style>
-</head>
-<body>
-
-<h2>Productos</h2>
-
-<label for="categoria"><strong>Categoría:</strong></label>
-<select id="categoria" onchange="cargarFiltros(this.value)">
-    <option value="">-- Seleccione --</option>
-    <?php if (!empty($data['categorias'])): ?>
-        <?php foreach ($data['categorias'] as $cat): ?>
-            <option value="<?= htmlspecialchars($cat['id']) ?>">
-                <?= htmlspecialchars($cat['nombre']) ?>
-            </option>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</select>
-
-<div id="filtros-container">
-    <p>Seleccione una categoría para ver los filtros.</p>
-</div>
+<?php // Vista de Productos adaptada para incrustarse en el Layout Principal ?>
 
 <script>
-async function cargarFiltros(categoriaId) {
-    const contenedor = document.getElementById('filtros-container');
-
-    if (!categoriaId) {
-        contenedor.innerHTML = '<p>Seleccione una categoría para ver los filtros.</p>';
-        return;
-    }
-
-    contenedor.innerHTML = '<p>Cargando filtros...</p>';
-
-    try {
-        const response = await fetch(`<?= base_url() ?>Productos/apiGetFiltros/${categoriaId}`);
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const json = await response.json();
-
-        if (!json.status || json.filtros.length === 0) {
-            contenedor.innerHTML = '<p>No hay filtros disponibles para esta categoría.</p>';
-            return;
-        }
-
-        let html = '';
-        json.filtros.forEach(filtro => {
-            html += `<div class="filtro-grupo">`;
-            html += `<h4>${filtro.nombre}</h4>`;
-            filtro.valores.forEach(valor => {
-                const id = `filtro_${filtro.id}_${valor}`;
-                html += `<label>
-                    <input type="checkbox" id="${id}" name="filtro_${filtro.id}[]" value="${valor}">
-                    ${valor}
-                </label>`;
-            });
-            html += `</div>`;
-        });
-
-        contenedor.innerHTML = html;
-
-    } catch (error) {
-        contenedor.innerHTML = `<p style="color:red;">Error al cargar filtros: ${error.message}</p>`;
-    }
-}
+    // Definimos la constante global de la URL Base de tu MVC para usarla en los archivos JS externos
+    const BASE_URL = "<?= base_url(); ?>";
 </script>
 
-</body>
-</html>
+<div style="padding: 20px; font-family: 'Segoe UI', system-ui, sans-serif;">
+    <h2 style="color: #2d3748; font-size: 24px; margin-bottom: 20px; font-weight: 600;">
+        Gestión de Catálogo de Productos (EAV + AJAX)
+    </h2>
+
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+        
+        <div class="sidebar" style="width: 25%; background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <label for="categoria" style="display: block; margin-bottom: 8px; color: #4a5568; font-weight: 600; font-size: 14px;">Categoría:</label>
+            <select id="categoria" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 5px; background: #fff; font-size: 14px; margin-bottom: 15px;">
+                <option value="">-- Seleccione Categoría --</option>
+                <?php if (!empty($data['categorias'])): ?>
+                    <?php foreach ($data['categorias'] as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat['id']) ?>">
+                            <?= htmlspecialchars($cat['nombre']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+
+            <div id="filtros-container">
+                <p style="color:#a0aec0; font-size:13px; margin: 0; text-align: center; padding: 10px 0;">
+                    Seleccione una categoría para desplegar especificaciones dinámicas (EAV).
+                </p>
+            </div>
+        </div>
+
+        <div class="main-content" style="width: 75%; background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <label for="buscador" style="display: block; margin-bottom: 8px; color: #4a5568; font-weight: 600; font-size: 14px;">Buscador en Tiempo Real:</label>
+            <input type="text" id="buscador" placeholder="Escriba el nombre o descripción del producto..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 14px; margin-bottom: 20px; box-sizing: border-box;">
+
+            <table id="tabla-productos" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                <thead>
+                    <tr style="background-color: #f7fafc; border-bottom: 2px solid #edf2f7;">
+                        <th style="padding: 12px; color: #4a5568;">ID</th>
+                        <th style="padding: 12px; color: #4a5568;">Producto</th>
+                        <th style="padding: 12px; color: #4a5568;">Categoría</th>
+                        <th style="padding: 12px; color: #4a5568;">Descripción</th>
+                        <th style="padding: 12px; color: #4a5568;">Precio</th>
+                        <th style="padding: 12px; color: #4a5568;">Stock</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-productos">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #a0aec0;">Cargando catálogo...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="<?= base_url(); ?>Assets/js/productos_async.js"></script>

@@ -1,19 +1,16 @@
 <?php
 
-// Base URL dinámica: funciona sin importar en qué carpeta esté el proyecto
-function base_url() {
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host     = $_SERVER['HTTP_HOST'];
-    $script   = dirname($_SERVER['SCRIPT_NAME']);
-    $base     = rtrim($script, '/\\');
-    return $protocol . '://' . $host . $base . '/';
-}
+// URL Base fija y absoluta: repara los fallos de renderizado del motor de vistas del framework
+const BASE_URL = "http://localhost/proyecto-php/"; 
 
-const BASE_URL = "";   // Mantenido por compatibilidad; usar base_url() en su lugar
+// Función dinámica mantenida para no romper llamadas del otro grupo
+function base_url() {
+    return BASE_URL;
+}
 
 const CONNECTION  = false;
 const DB_HOST     = "localhost";
 const DB_NAME     = "proyecto_php";
-const DB_USER     = "root";
+    const DB_USER     = "root";
 const DB_PASS     = "";
 const DB_CHARSET  = "utf8";

@@ -1,18 +1,30 @@
 <table>
     <thead>
         <tr>
-            <td>id</td>
-            <td>nombre</td>
-            <td>email</td>  
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Correo Electrónico</th>  
         </tr>
     </thead>
     <tbody> 
-        <?php foreach($data as $usuario): ?>
+        <?php 
+        // Validamos si la información viene directamente en $data o dentro de $data['usuarios']
+        $usuarios = isset($data['usuarios']) ? $data['usuarios'] : $data;
+
+        if (!empty($usuarios) && is_array($usuarios)): 
+            foreach($usuarios as $usuario): ?>
+                <tr>
+                    <td><?= htmlspecialchars($usuario["id"]); ?></td>
+                    <td><?= htmlspecialchars($usuario["nombre"]); ?></td>
+                    <td><?= htmlspecialchars($usuario["correo"]); ?></td> 
+                </tr>
+            <?php 
+            endforeach; 
+        else: 
+        ?>
             <tr>
-                <td><?php echo $usuario["id"]; ?></td>
-                <td><?php echo $usuario["nombre"]; ?></td>
-                <td><?php echo $usuario["email"]; ?></td>
+                <td colspan="3" style="text-align: center; color: #888;">No se encontraron usuarios en la base de datos.</td>
             </tr>
-        <?php endforeach; ?>
+        <?php endif; ?>
     </tbody>
 </table>
