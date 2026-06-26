@@ -14,6 +14,44 @@ class ProductosController extends Controller {
          }
     }
 
+    /**
+     * Endpoint JSON: Devuelve los atributos y valores únicos de una categoría.
+     * URL: Productos/apiGetFiltros/{categoria_id}
+     * 
+     * Respuesta exitosa:
+     * {
+     *   "status": true,
+     *   "filtros": [
+     *     { "id": 1, "nombre": "Marca", "valores": ["Lacoste", "Nike"] },
+     *     { "id": 3, "nombre": "Talla", "valores": ["L", "M", "S"] }
+     *   ]
+     * }
+     */
+    public function apiGetFiltros($categoriaId = '') {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+
+        // Validar que se recibió un ID de categoría válido
+        $categoriaId = trim($categoriaId, ',');
+        if (empty($categoriaId) || !is_numeric($categoriaId)) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'ID de categoría no válido.'
+            ]);
+            return;
+        }
+
+        $categoriaId = intval($categoriaId);
+
+        // Consultar los filtros mediante el modelo EAV
+        $filtros = $this->model->getFiltrosPorCategoria($categoriaId);
+
+        echo json_encode([
+            'status'  => true,
+            'filtros' => $filtros
+        ]);
+    }
+
     public function eliminar($id) {
         if (!in_array('eliminar_productos', $_SESSION['permisos'])) {
             header("Location: " . base_url() . "productos?msg=sin_permiso");
