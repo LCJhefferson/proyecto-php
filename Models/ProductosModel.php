@@ -8,6 +8,16 @@ class ProductosModel extends Model {
     }
 
     /**
+     * Obtiene todas las categorías disponibles.
+     */
+    public function getCategorias() {
+        $sql = "SELECT id, nombre FROM categorias ORDER BY nombre";
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Obtiene los atributos y sus valores únicos asociados a una categoría.
      * Consulta las tablas EAV: productos, valores_productos, atributos.
      * 
@@ -28,7 +38,6 @@ class ProductosModel extends Model {
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Agrupar valores únicos por atributo
         $filtros = [];
         foreach ($rows as $row) {
             $atributoId = $row['atributo_id'];
@@ -39,13 +48,11 @@ class ProductosModel extends Model {
                     'valores' => []
                 ];
             }
-            // Agregar valor si no está duplicado
             if (!in_array($row['valor'], $filtros[$atributoId]['valores'])) {
                 $filtros[$atributoId]['valores'][] = $row['valor'];
             }
         }
 
-        // Reindexar para devolver un arreglo numérico
         return array_values($filtros);
     }
 }

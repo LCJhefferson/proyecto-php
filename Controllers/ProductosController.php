@@ -14,6 +14,11 @@ class ProductosController extends Controller {
          }
     }
 
+    public function index() {
+        $categorias = $this->model->getCategorias();
+        $this->views->render($this, 'index', ['categorias' => $categorias]);
+    }
+
     /**
      * Endpoint JSON: Devuelve los atributos y valores únicos de una categoría.
      * URL: Productos/apiGetFiltros/{categoria_id}
@@ -31,7 +36,6 @@ class ProductosController extends Controller {
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-cache, no-store, must-revalidate');
 
-        // Validar que se recibió un ID de categoría válido
         $categoriaId = trim($categoriaId, ',');
         if (empty($categoriaId) || !is_numeric($categoriaId)) {
             echo json_encode([
@@ -43,7 +47,6 @@ class ProductosController extends Controller {
 
         $categoriaId = intval($categoriaId);
 
-        // Consultar los filtros mediante el modelo EAV
         $filtros = $this->model->getFiltrosPorCategoria($categoriaId);
 
         echo json_encode([
