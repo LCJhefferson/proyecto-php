@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My proyecto MVC</title>
 </head>
-    <?php require_once "header.php"; ?>
-    <?php require_once "nav.php"; ?>
+<body>
+    <?php include 'Views/layout/header.php'; ?>
+
+    <?php include 'Views/layout/nav.php'; ?>
+
     <main>
-        <?php require_once $contentView; ?>
+        <?php echo $contentView; ?> 
     </main>
-    <?php require_once "footer.php"; ?>
+    
+    <?php include 'Views/layout/footer.php'; ?>
 
 </body>
 </html>
