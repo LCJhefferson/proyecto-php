@@ -1,4 +1,4 @@
 
     <footer>    
-        <p>&copy; <?=date("Y")?> Mi proyecto MVC. Footer.</p>
+        <p>&copy; <?=date("Y")?> Mi proyecto MVC. todos los derechos rreservados.</p>
     </footer>
