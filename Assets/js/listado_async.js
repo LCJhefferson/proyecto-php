@@ -14,9 +14,9 @@ document.addEventListener("DOMContentLoaded", function() {
     cargarUsuarios();
 });
 
-function cargarUsuarios() {
+function cargarUsuarios(busqueda = '') {
     // Apuntamos de forma exacta al método asíncrono del controlador
-    const url = window.location.origin + "/proyecto-php/Users/cargarUsuariosAsync";
+    const url = window.location.origin + "/proyecto-php/Users/cargarUsuariosAsync?buscar=" + encodeURIComponent(busqueda);
     
     fetch(url)
         .then(response => response.json())
@@ -25,7 +25,7 @@ function cargarUsuarios() {
             tbody.innerHTML = ""; // Limpiamos la tabla
             
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No hay usuarios disponibles</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No se encontraron usuarios</td></tr>`;
                 return;
             }
 
@@ -40,6 +40,13 @@ function cargarUsuarios() {
             });
         })
         .catch(error => console.error("Error cargando los usuarios asíncronos:", error));
+}
+
+const inputBuscadorUsuarios = document.getElementById('buscadorUsuarios');
+if (inputBuscadorUsuarios) {
+    inputBuscadorUsuarios.addEventListener('input', debounce(() => {
+        cargarUsuarios(inputBuscadorUsuarios.value);
+    }, 400));
 }
 
 

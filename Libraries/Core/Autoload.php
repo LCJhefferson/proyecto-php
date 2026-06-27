@@ -1,4 +1,3 @@
-
 <?php
 spl_autoload_register(function($className) {
     $filePath = "Libraries/Core/{$className}.php";

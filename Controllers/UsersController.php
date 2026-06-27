@@ -21,9 +21,21 @@ class UsersController extends Controller {
     public function cargarUsuariosAsync() {
         header('Content-Type: application/json; charset=utf-8');
         
-        // CORREGIDO: Agregamos 'nombre' a la consulta SQL para que el JS lo pueda pintar en la tabla
-        $sql = "SELECT id, nombre, correo FROM usuarios WHERE estado = 1 ORDER BY id DESC";
+        $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+
+        $sql = "SELECT id, nombre, correo FROM usuarios WHERE estado = 1";
+        
+        if (!empty($buscar)) {
+            $sql .= " AND (nombre LIKE :buscar OR correo LIKE :buscar)";
+        }
+        
+        $sql .= " ORDER BY id DESC";
         $stmt = $this->model->connect()->prepare($sql);
+        
+        if (!empty($buscar)) {
+            $stmt->bindValue(':buscar', "%$buscar%", PDO::PARAM_STR);
+        }
+        
         $stmt->execute();
         $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

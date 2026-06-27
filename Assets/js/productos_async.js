@@ -27,6 +27,15 @@
         }, 400));
     }
 
+    if (contenedorFiltros) {
+        // Event delegation para los checkboxes dinámicos
+        contenedorFiltros.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                buscarProductos();
+            }
+        });
+    }
+
     // Carga los Checkboxes EAV dinámicamente
     async function cargarFiltrosDinamicos(categoriaId) {
         if (!contenedorFiltros) return;
@@ -113,11 +122,21 @@
         const categoriaId = selectCategoria ? selectCategoria.value : '';
         const buscarTexto = inputBuscador ? inputBuscador.value : '';
 
+        let queryParams = new URLSearchParams();
+        if (categoriaId) queryParams.append('categoria_id', categoriaId);
+        if (buscarTexto) queryParams.append('buscar', buscarTexto);
+
+        // Recolectar checkboxes seleccionados
+        const checkboxes = document.querySelectorAll('#filtros-container input[type="checkbox"]:checked');
+        checkboxes.forEach(cb => {
+            queryParams.append(cb.name, cb.value); // cb.name incluye los corchetes []
+        });
+
         tbodyProductos.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#2b6cb0; padding: 20px;">Buscando productos...</td></tr>';
 
         try {
             const urlBaseLimpia = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-            const url = `${urlBaseLimpia}Productos/apiGetProductos?categoria_id=${categoriaId}&buscar=${encodeURIComponent(buscarTexto)}`;
+            const url = `${urlBaseLimpia}Productos/apiGetProductos?${queryParams.toString()}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             

@@ -54,7 +54,17 @@ class ProductosController extends Controller {
         $categoriaId = isset($_GET['categoria_id']) ? intval($_GET['categoria_id']) : null;
         $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
 
-        $productos = $this->model->getProductosAsync($categoriaId, $buscar);
+        $filtros = [];
+        foreach ($_GET as $key => $value) {
+            if (strpos($key, 'filtro_') === 0 && is_array($value)) {
+                $atributoId = intval(str_replace('filtro_', '', $key));
+                if ($atributoId > 0) {
+                    $filtros[$atributoId] = $value;
+                }
+            }
+        }
+
+        $productos = $this->model->getProductosAsync($categoriaId, $buscar, $filtros);
         
         echo json_encode([
             'status' => true,

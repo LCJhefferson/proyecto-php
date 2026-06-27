@@ -15,8 +15,6 @@ class Controller {
         if (file_exists($modelPath)) {
             require_once $modelPath;
             $this->model = new $modelName();
-        } else {
-            echo "Error: No se pudo cargar el modelo ($modelName).";
         }
     }
 

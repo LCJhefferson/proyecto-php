@@ -56,7 +56,7 @@ class ProductosModel extends Model {
     /**
      * Obtiene y filtra productos de forma dinámica (Para el buscador con AJAX)
      */
-    public function getProductosAsync($categoriaId = null, $buscar = '') {
+    public function getProductosAsync($categoriaId = null, $buscar = '', $filtros = []) {
         $sql = "SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock, c.nombre AS categoria 
                 FROM productos p 
                 INNER JOIN categorias c ON p.categoria_id = c.id 
@@ -68,6 +68,34 @@ class ProductosModel extends Model {
         if (!empty($buscar)) {
             $sql .= " AND (p.nombre LIKE :buscar OR p.descripcion LIKE :buscar)";
         }
+
+        $bindParamsFiltros = [];
+        if (!empty($filtros)) {
+            $totalFiltros = count($filtros);
+            $subqueryConditions = [];
+            
+            $i = 0;
+            foreach ($filtros as $atributoId => $valores) {
+                $placeholders = [];
+                foreach ($valores as $index => $valor) {
+                    $paramName = ":filtro_{$i}_{$index}";
+                    $placeholders[] = $paramName;
+                    $bindParamsFiltros[$paramName] = $valor;
+                }
+                
+                $placeholdersStr = implode(',', $placeholders);
+                $subqueryConditions[] = "(id_atributo = " . intval($atributoId) . " AND valor IN ($placeholdersStr))";
+                $i++;
+            }
+            
+            $sql .= " AND p.id IN (
+                SELECT id_producto 
+                FROM valores_productos 
+                WHERE " . implode(' OR ', $subqueryConditions) . " 
+                GROUP BY id_producto 
+                HAVING COUNT(DISTINCT id_atributo) = $totalFiltros
+            )";
+        }
         
         $sql .= " ORDER BY p.id DESC";
         $stmt = $this->connect()->prepare($sql);
@@ -77,6 +105,11 @@ class ProductosModel extends Model {
         }
         if (!empty($buscar)) {
             $stmt->bindValue(':buscar', "%$buscar%", PDO::PARAM_STR);
+        }
+        if (!empty($bindParamsFiltros)) {
+            foreach ($bindParamsFiltros as $param => $val) {
+                $stmt->bindValue($param, $val, PDO::PARAM_STR);
+            }
         }
         
         $stmt->execute();
